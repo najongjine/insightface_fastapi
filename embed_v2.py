@@ -1,3 +1,5 @@
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 import os
 import cv2
 import faiss
@@ -7,6 +9,13 @@ import pandas as pd
 from pathlib import Path
 import insightface
 import albumentations as A
+
+# 🔧 경로 설정 (하드코딩)
+data_folder = "./person"
+save_path = "./embedding/person"
+
+# ✅ FastAPI 인스턴스 생성
+app = FastAPI()
 
 # 🔧 증강 설정
 augment = A.Compose([
@@ -88,7 +97,6 @@ def build_and_save_faiss(train_df: pd.DataFrame, save_path: str):
     with open(os.path.join(save_path, "faiss_labels.pkl"), "wb") as f:
         pickle.dump(labels, f)
 
-    # 전체 데이터프레임 저장 (선택)
     train_df.to_pickle(os.path.join(save_path, "train_df.pkl"))
 
     print("✅ FAISS 인덱스 & 라벨 저장 완료")
@@ -106,9 +114,22 @@ def run_pipeline(data_folder: str, save_path: str, device: str = "cpu"):
     print("🚀 FAISS 인덱스 생성 및 저장 중...")
     index, labels, df = build_and_save_faiss(train_df, save_path)
 
-    return index, labels, df
+    return len(df)
 
+# ✅ API 엔드포인트
+@app.post("/train")
+def train_faces():
+    try:
+        count = run_pipeline(data_folder, save_path)
+        return {"status": "success", "count": count}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-data_folder = "./person"
-save_path = "./embedding/person"
-index, labels, df = run_pipeline(data_folder, save_path, device="cpu")
+@app.get("/")
+def root():
+    return {"msg": "얼굴 임베딩 생성 API"}
+
+# ✅ 로컬 실행
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("embed_v2:app", host="0.0.0.0", port=8000, reload=True)
