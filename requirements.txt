@@ -1,0 +1,13 @@
+insightface
+faiss-cpu
+opencv-python
+numpy
+pandas
+albumentations
+torch
+torchvision
+scikit-learn
+fastapi
+uvicorn[standard]
+onnxruntime
+python-multipart
