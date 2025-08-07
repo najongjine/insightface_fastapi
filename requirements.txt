@@ -11,3 +11,5 @@ fastapi
 uvicorn[standard]
 onnxruntime
 python-multipart
+sqlalchemy
+psycopg2-binary

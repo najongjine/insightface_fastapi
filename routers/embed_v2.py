@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import os
 import cv2
@@ -9,13 +10,15 @@ import pandas as pd
 from pathlib import Path
 import insightface
 import albumentations as A
+from sqlalchemy import text
+from db import SessionLocal
 
 # 🔧 경로 설정 (하드코딩)
-data_folder = "./person"
-save_path = "./embedding/person"
+data_folder = os.path.abspath("person") 
+save_path = os.path.abspath("embedding/person") 
 
 # ✅ FastAPI 인스턴스 생성
-app = FastAPI()
+router = APIRouter()
 
 # 🔧 증강 설정
 augment = A.Compose([
@@ -117,7 +120,7 @@ def run_pipeline(data_folder: str, save_path: str, device: str = "cpu"):
     return len(df)
 
 # ✅ API 엔드포인트
-@app.post("/train")
+@router.post("/train")
 def train_faces():
     try:
         count = run_pipeline(data_folder, save_path)
@@ -125,11 +128,23 @@ def train_faces():
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-@app.get("/")
+@router.get("/")
 def root():
     return {"msg": "얼굴 임베딩 생성 API"}
 
+@router.get("/dbtest")
+def db_test():
+    db = SessionLocal()
+    try:
+        result = db.execute("SELECT now();")
+        now = result.fetchone()[0]
+        return {"db_time": str(now)}
+    finally:
+        db.close()
+
+"""
 # ✅ 로컬 실행
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("embed_v2:app", host="0.0.0.0", port=8000, reload=True)
+"""

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from insightface.app import FaceAnalysis
 import numpy as np
@@ -8,12 +9,14 @@ import pickle
 import os
 import uvicorn
 import tempfile
+from sqlalchemy import text
+from db import SessionLocal
 
 # ✅ FastAPI 앱 생성
-app = FastAPI()
+router = APIRouter()
 
 # ✅ 모델 및 벡터 인덱스 로드
-load_path = ""  # 실제 경로로 변경 필요
+load_path = os.path.abspath("embedding/person")  # 실제 경로로 변경 필요
 
 model = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
 model.prepare(ctx_id=0)
@@ -33,7 +36,7 @@ def get_face_embedding_from_bytes(image_bytes: bytes):
     return None
 
 # ✅ 얼굴 예측 API
-@app.post("/predict/")
+@router.post("/predict")
 async def predict(file: UploadFile = File(...), top_k: int = 1):
     contents = await file.read()
     embedding = get_face_embedding_from_bytes(contents)
@@ -57,10 +60,22 @@ async def predict(file: UploadFile = File(...), top_k: int = 1):
     return {"results": results}
 
 
-@app.get("/")
+@router.get("/")
 def hello():
-    return {"msg": "Hello FastAPI!"}
+    return {"msg": "predict api"}
 
+@router.get("/dbtest")
+def db_test():
+    db = SessionLocal()
+    try:
+        result = db.execute(text("SELECT now();"))
+        now = result.fetchone()[0]
+        print(f"## now: ",now)
+        return {"db_time": now}
+    finally:
+        db.close()
+"""
 # ✅ 로컬에서 실행할 경우
 if __name__ == "__main__":
     uvicorn.run("predict:app", host="0.0.0.0", port=8000, reload=True)
+"""
