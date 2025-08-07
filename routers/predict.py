@@ -12,6 +12,9 @@ import tempfile
 from sqlalchemy import text
 from db import SessionLocal
 
+faiss_index_name="faiss_index.index"
+faiss_label_name="faiss_labels.pkl"
+
 # ✅ FastAPI 앱 생성
 router = APIRouter()
 
@@ -21,8 +24,8 @@ load_path = os.path.abspath("embedding/person")  # 실제 경로로 변경 필�
 model = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
 model.prepare(ctx_id=0)
 
-index = faiss.read_index(os.path.join(load_path, "faiss_index.index"))
-with open(os.path.join(load_path, "faiss_labels.pkl"), "rb") as f:
+index = faiss.read_index(os.path.join(load_path, faiss_index_name))
+with open(os.path.join(load_path, faiss_label_name), "rb") as f:
     labels = pickle.load(f)
 
 # ✅ 얼굴 임베딩 추출 함수

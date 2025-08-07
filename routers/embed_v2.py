@@ -16,6 +16,10 @@ from db import SessionLocal
 # 🔧 경로 설정 (하드코딩)
 data_folder = os.path.abspath("person") 
 save_path = os.path.abspath("embedding/person") 
+faiss_index_name="faiss_index.index"
+faiss_label_name="faiss_labels.pkl"
+traindf_name="train_df.pkl"
+
 
 # ✅ FastAPI 인스턴스 생성
 router = APIRouter()
@@ -94,13 +98,13 @@ def build_and_save_faiss(train_df: pd.DataFrame, save_path: str):
 
     index = faiss.IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
-    faiss.write_index(index, os.path.join(save_path, "faiss_index.index"))
+    faiss.write_index(index, os.path.join(save_path, faiss_index_name))
 
     labels = train_df['label'].tolist()
-    with open(os.path.join(save_path, "faiss_labels.pkl"), "wb") as f:
+    with open(os.path.join(save_path, faiss_label_name), "wb") as f:
         pickle.dump(labels, f)
 
-    train_df.to_pickle(os.path.join(save_path, "train_df.pkl"))
+    train_df.to_pickle(os.path.join(save_path, traindf_name))
 
     print("✅ FAISS 인덱스 & 라벨 저장 완료")
     return index, labels, train_df
