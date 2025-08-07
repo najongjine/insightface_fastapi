@@ -45,7 +45,7 @@ async def predict(file: UploadFile = File(...), top_k: int = 1):
     embedding = get_face_embedding_from_bytes(contents)
 
     if embedding is None:
-        return JSONResponse(status_code=400, content={"message": "❌ 얼굴 인식 실패"})
+        return {"success":False, "message":"❌ 얼굴 인식 실패"}
 
     # 정규화
     embedding = embedding.astype("float32")
@@ -59,8 +59,7 @@ async def predict(file: UploadFile = File(...), top_k: int = 1):
             "label": labels[idx],
             "score": float(score)
         })
-
-    return {"results": results}
+    return {"success":False, "results":results,"message":""}
 
 
 @router.get("/")
